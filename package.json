@@ -1,0 +1,70 @@
+{
+  "name": "delta-force-doctor",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Production-ready Windows desktop diagnostics and repair toolkit for Delta Force players.",
+  "main": "apps/desktop/dist-electron/main.js",
+  "author": "DeltaForceDoctor",
+  "license": "UNLICENSED",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "tsc -p tsconfig.json && vite build && npm run build:electron",
+    "build:electron": "tsc -p apps/desktop/electron/tsconfig.json",
+    "start": "electron .",
+    "dist": "npm run build && electron-builder",
+    "lint": "eslint . --ext .ts,.tsx",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p apps/desktop/electron/tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@vitejs/plugin-react": "latest",
+    "better-sqlite3": "latest",
+    "clsx": "latest",
+    "electron-is-dev": "latest",
+    "lucide-react": "latest",
+    "react": "latest",
+    "react-dom": "latest"
+  },
+  "devDependencies": {
+    "@types/node": "latest",
+    "@types/react": "latest",
+    "@types/react-dom": "latest",
+    "autoprefixer": "latest",
+    "electron": "latest",
+    "electron-builder": "latest",
+    "eslint": "latest",
+    "postcss": "latest",
+    "tailwindcss": "latest",
+    "typescript": "latest",
+    "vite": "latest"
+  },
+  "build": {
+    "appId": "com.deltaforcedoctor.desktop",
+    "productName": "DeltaForceDoctor",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "apps/desktop/dist/**/*",
+      "apps/desktop/dist-electron/**/*",
+      "database/**/*",
+      "knowledgebase/**/*",
+      "assets/**/*",
+      "powershell/**/*",
+      "reports/.gitkeep"
+    ],
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "icon": "assets/icon.ico",
+      "requestedExecutionLevel": "asInvoker"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true
+    }
+  }
+}

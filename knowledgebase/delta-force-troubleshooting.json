@@ -1,0 +1,4 @@
+[
+  { "id": "df-shader-cache", "title": "Clear Delta Force shader cache", "category": "Delta Force", "severity": "medium" },
+  { "id": "steam-verify-files", "title": "Verify Steam game files", "category": "Steam", "severity": "low" }
+]
