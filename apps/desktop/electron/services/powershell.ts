@@ -1,13 +1,12 @@
-import { execFile } from 'node:child_process';
+import { LoggerService } from '../core/logger/logger-service.js';
+import { PowerShellService } from './powershell/powershell-service.js';
 
-export interface PowerShellResult { stdout: string; stderr: string; exitCode: number; }
+export type { PowerShellResult } from '../shared/interfaces/services.js';
 
-/** Executes PowerShell with a constrained, non-interactive profile for diagnostics and safe repairs. */
-export function runPowerShell(command: string, timeoutMs = 30_000): Promise<PowerShellResult> {
-  return new Promise((resolve) => {
-    execFile('powershell.exe', ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-Command', command], { timeout: timeoutMs, windowsHide: true }, (error, stdout, stderr) => {
-      const exitCode = typeof (error as NodeJS.ErrnoException | null)?.code === 'number' ? Number((error as NodeJS.ErrnoException).code) : 0;
-      resolve({ stdout: stdout.toString(), stderr: stderr.toString(), exitCode });
-    });
-  });
+const fallbackLogger = new LoggerService(process.env.DELTA_FORCE_DOCTOR_LOG_DIR ?? 'logs');
+const fallbackPowerShell = new PowerShellService(fallbackLogger);
+
+/** Backward-compatible facade. Prefer injecting PowerShellService through CoreEngine dependencies. */
+export function runPowerShell(command: string, timeoutMs = 30_000) {
+  return fallbackPowerShell.run(command, timeoutMs);
 }
