@@ -1,7 +1,7 @@
 import { shell } from 'electron';
 import type Database from 'better-sqlite3';
-import type { RepairAction } from '../core/types.js';
-import { runPowerShell } from '../services/powershell.js';
+import type { RepairAction, RepairResult } from '../core/types.js';
+import type { Logger, PowerShellService } from '../shared/interfaces/services.js';
 
 export const repairActions: RepairAction[] = [
   { id: 'winsock-reset', title: 'Reset Winsock', description: 'Safely resets the Windows network catalog; reboot recommended.', requiresAdmin: true, safe: true, command: 'netsh winsock reset' },
@@ -16,25 +16,33 @@ export const repairActions: RepairAction[] = [
 
 /** Executes only allow-listed safe repairs and records a durable audit trail. */
 export class RepairEngine {
-  constructor(private readonly db: Database.Database) {}
+  constructor(
+    private readonly db: Database.Database,
+    private readonly powerShell: PowerShellService,
+    private readonly logger: Logger
+  ) {}
 
   list(): RepairAction[] { return repairActions; }
 
-  async run(id: string): Promise<{ status: 'completed' | 'opened' | 'blocked'; output: string }> {
+  async run(id: string): Promise<RepairResult> {
     const action = repairActions.find((item) => item.id === id);
-    if (!action || !action.safe) return { status: 'blocked', output: 'Repair is not allow-listed.' };
-    let status: 'completed' | 'opened' = 'completed';
+    if (!action || !action.safe) {
+      this.logger.warn('Blocked non allow-listed repair request', { repairId: id });
+      return { status: 'blocked', output: 'Repair is not allow-listed.' };
+    }
+    let status: RepairResult['status'] = 'completed';
     let output = '';
     if (action.url) {
       await shell.openExternal(action.url);
       status = 'opened';
       output = action.url;
     } else if (action.command) {
-      const result = await runPowerShell(action.command, 120_000);
+      const result = await this.powerShell.run(action.command, 120_000);
       output = `${result.stdout}\n${result.stderr}`.trim();
     }
     this.db.prepare('INSERT INTO repair_history (repair_id, title, status, command, output, created_at) VALUES (?, ?, ?, ?, ?, ?)')
       .run(action.id, action.title, status, action.command ?? action.url ?? null, output, new Date().toISOString());
+    this.logger.info('Repair action recorded', { repairId: action.id, status });
     return { status, output };
   }
 }

@@ -1,14 +1,13 @@
 import os from 'node:os';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
-import type { ScannerResult } from '../core/types.js';
-import { runPowerShell } from '../services/powershell.js';
+import type { Scanner, ScannerResult } from '../core/types.js';
+import type { PowerShellService } from '../shared/interfaces/services.js';
 
-export interface Scanner { id: string; name: string; run(): Promise<ScannerResult>; }
 const ok = (scannerId: string, name: string, recommendation: string, details: Record<string, unknown> = {}): ScannerResult => ({ scannerId, name, status: 'passed', severity: 'info', recommendation, repairAvailable: false, details, knowledgeMatches: [] });
 const warn = (scannerId: string, name: string, recommendation: string, details: Record<string, unknown> = {}, repairAvailable = false): ScannerResult => ({ scannerId, name, status: 'warning', severity: 'medium', recommendation, repairAvailable, details, knowledgeMatches: [] });
 
-export function createScanners(): Scanner[] {
+export function createScanners(powerShell: PowerShellService): Scanner[] {
   return [
     { id: 'cpu', name: 'CPU', run: async () => ok('cpu', 'CPU', 'CPU inventory collected.', { model: os.cpus()[0]?.model ?? 'unknown', cores: os.cpus().length }) },
     { id: 'ram', name: 'RAM', run: async () => ok('ram', 'RAM', 'Memory capacity collected.', { totalGb: Math.round(os.totalmem() / 1024 / 1024 / 1024) }) },
@@ -20,7 +19,7 @@ export function createScanners(): Scanner[] {
     { id: 'eventviewer', name: 'Event Viewer', run: async () => {
       if (process.platform !== 'win32') return warn('eventviewer', 'Event Viewer', 'Event Viewer collection is available on Windows builds.', { platform: process.platform });
       const ps = "Get-WinEvent -FilterHashtable @{LogName='Application'; StartTime=(Get-Date).AddDays(-7)} -MaxEvents 25 | Select-Object TimeCreated,ProviderName,Id,LevelDisplayName,Message | ConvertTo-Json -Compress";
-      const result = await runPowerShell(ps, 20_000);
+      const result = await powerShell.run(ps, 20_000);
       return result.exitCode === 0 ? ok('eventviewer', 'Event Viewer', 'Recent Windows application events collected.', { events: result.stdout }) : warn('eventviewer', 'Event Viewer', 'Could not collect Event Viewer data without elevated Windows access.', { stderr: result.stderr });
     } },
     { id: 'gpu', name: 'GPU Driver', run: async () => warn('gpu', 'GPU Driver', 'Open official NVIDIA, AMD, or Intel pages if display crashes are detected.', { officialVendors: ['NVIDIA', 'AMD', 'Intel'] }, true) },
