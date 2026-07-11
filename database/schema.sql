@@ -1,0 +1,7 @@
+CREATE TABLE IF NOT EXISTS scan_runs (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  module_id TEXT NOT NULL,
+  status TEXT NOT NULL,
+  findings INTEGER NOT NULL,
+  created_at TEXT NOT NULL
+);
