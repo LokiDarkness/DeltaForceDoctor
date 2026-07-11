@@ -2,11 +2,14 @@ export type Severity = 'info' | 'low' | 'medium' | 'high' | 'critical';
 export type ScanStatus = 'idle' | 'running' | 'passed' | 'warning' | 'failed';
 
 export interface ScannerResult {
+  id: string;
   scannerId: string;
   name: string;
   status: Exclude<ScanStatus, 'idle' | 'running'>;
   severity: Severity;
+  summary: string;
   recommendation: string;
+  repairSupported: boolean;
   repairAvailable: boolean;
   details: Record<string, unknown>;
   knowledgeMatches: string[];
@@ -49,4 +52,13 @@ export interface RepairAction {
   safe: boolean;
   command?: string;
   url?: string;
+}
+
+export interface ScanReport {
+  runId: string;
+  generatedAt: string;
+  status: Exclude<ScanStatus, 'idle' | 'running'>;
+  totalScanners: number;
+  findings: number;
+  results: ScannerResult[];
 }

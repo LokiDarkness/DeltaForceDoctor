@@ -1,0 +1,4 @@
+import type { Scanner } from '../types.js';
+import { pass, warn } from '../result.js';
+import { isWindows, runPowerShell } from '../../services/powershell.js';
+export const secureBootScanner: Scanner = { id: 'secureboot', name: 'Secure Boot', description: 'Checks UEFI Secure Boot state.', async run() { if (!isWindows()) return warn(this.id,this.name,'Secure Boot status requires Windows firmware APIs.','Check Secure Boot in BIOS/UEFI on the gaming PC.',{ platform: process.platform }); const raw=await runPowerShell('Confirm-SecureBootUEFI',15000); const enabled=raw.stdout.trim().toLowerCase()==='true'; return raw.exitCode===0 && enabled ? pass(this.id,this.name,'Secure Boot is enabled.','No Secure Boot action required.',{ enabled }) : warn(this.id,this.name,'Secure Boot is disabled or unavailable.','Enable Secure Boot in BIOS/UEFI if ACE reports a platform security requirement.',{ stdout: raw.stdout, stderr: raw.stderr },false,'high'); } };

@@ -1,0 +1,5 @@
+import os from 'node:os';
+import type { Scanner } from '../types.js';
+import { pass, warn } from '../result.js';
+import { isWindows, runPowerShellJson } from '../../services/powershell.js';
+export const virtualizationScanner: Scanner = { id: 'virtualization', name: 'Virtualization', description: 'Checks virtualization firmware flags exposed to Windows.', async run() { if (!isWindows()) return pass(this.id,this.name,'Virtualization scanner captured CPU architecture.','Enable virtualization only if required by your security stack.',{ architecture: os.arch() }); const { value, raw } = await runPowerShellJson<Record<string, unknown>>("Get-CimInstance Win32_Processor | Select-Object Name,VirtualizationFirmwareEnabled,VMMonitorModeExtensions,SecondLevelAddressTranslationExtensions",{},15000); return raw.exitCode===0 ? pass(this.id,this.name,'Virtualization firmware flags collected.','Review BIOS virtualization settings only if anti-cheat guidance requests it.',{ processor: value }) : warn(this.id,this.name,'Could not query virtualization firmware flags.','Check virtualization settings in Task Manager or BIOS/UEFI.',{ stderr: raw.stderr },false,'low'); } };

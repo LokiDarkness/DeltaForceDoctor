@@ -1,0 +1,5 @@
+import os from 'node:os';
+import type { Scanner } from '../types.js';
+import { pass, warn } from '../result.js';
+import { isWindows, runPowerShellJson } from '../../services/powershell.js';
+export const windowsScanner: Scanner = { id: 'windows', name: 'Windows', description: 'Collects Windows edition, build, and installation metadata.', async run() { if (!isWindows()) return warn(this.id,this.name,'Windows diagnostics are unavailable on this platform.','Run DeltaForceDoctor on the Windows PC used for Delta Force.',{ platform: process.platform }); const { value, raw, parseError } = await runPowerShellJson<Record<string, unknown>>("Get-CimInstance Win32_OperatingSystem | Select-Object Caption,Version,BuildNumber,OSArchitecture,LastBootUpTime",{},15000); return raw.exitCode===0 ? pass(this.id,this.name,'Windows release information collected.','Install pending Windows updates before deeper troubleshooting.',{ os: value, parseError }) : warn(this.id,this.name,'Could not collect Windows version through PowerShell.','Run the app normally on Windows and retry.',{ stderr: raw.stderr },false,'low'); } };

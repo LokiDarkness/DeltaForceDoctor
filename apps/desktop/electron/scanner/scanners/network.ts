@@ -1,0 +1,4 @@
+import os from 'node:os';
+import type { Scanner } from '../types.js';
+import { pass, warn } from '../result.js';
+export const networkScanner: Scanner = { id: 'network', name: 'Network', description: 'Checks active network interfaces needed for online launch.', async run() { const interfaces=os.networkInterfaces(); const active=Object.entries(interfaces).flatMap(([name,items])=>(items??[]).filter(i=>!i.internal).map(i=>({ name, family:i.family, address:i.address, mac:i.mac }))); return active.length>0 ? pass(this.id,this.name,'At least one non-internal network interface is active.','Use DNS/Winsock repair only if launcher connectivity fails.',{ interfaces: active },true) : warn(this.id,this.name,'No active non-internal network interface was detected.','Connect to the internet before launching Delta Force.',{ interfaces: active },true,'high'); } };

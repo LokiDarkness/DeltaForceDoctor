@@ -13,7 +13,7 @@ UI -> Core Engine -> Scanner Engine -> Knowledge Engine -> Repair Engine -> SQLi
 ## Implemented production foundations
 
 - `apps/desktop/electron/core`: typed engine contracts and orchestration.
-- `apps/desktop/electron/scanner`: independent scanner registry for CPU, RAM, disk, Windows, GPU, Steam, ACE, Delta Force, network, overlay, Event Viewer, Secure Boot, TPM, virtualization, and services.
+- `apps/desktop/electron/scanner`: reusable Scanner Engine with `ScannerManager`, shared result factories, independent scanners for CPU, GPU, RAM, disk, BIOS, TPM, Secure Boot, virtualization, Windows, Steam, driver, network, overlay, ACE, Delta Force, and Event Viewer, plus shared PowerShell helpers to avoid duplicated command plumbing.
 - `apps/desktop/electron/knowledgebase`: versioned JSON knowledge seed loader with keyword, event, and scanner matching.
 - `apps/desktop/electron/repair`: safe allow-listed repair actions for Winsock, DNS, SFC, DISM, Steam support, and official driver pages.
 - `apps/desktop/electron/reports`: JSON and HTML report exporter using persisted scanner and repair history.
@@ -22,3 +22,7 @@ UI -> Core Engine -> Scanner Engine -> Knowledge Engine -> Repair Engine -> SQLi
 ## Safety policy
 
 DeltaForceDoctor never bypasses anti-cheat, never patches or illegally modifies game files, and never downloads drivers automatically. Driver actions open official vendor websites only.
+
+## Scanner Engine
+
+`ScannerManager` owns scanner discovery, asynchronous `Promise.all` execution, knowledge-base enrichment, SQLite persistence, and scan report generation. Each scanner is an isolated module with a small `Scanner` contract, making scanners unit-test-ready by invoking `run(context)` with deterministic context and mocking shared services where needed. The React dashboard consumes generated scan reports through the Electron IPC bridge and renders the latest report summary without breaking the legacy module list API.

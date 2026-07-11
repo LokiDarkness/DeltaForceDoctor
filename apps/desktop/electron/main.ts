@@ -43,6 +43,7 @@ ipcMain.handle('modules:list', () => core.modules());
 ipcMain.handle('knowledge:list', () => core.knowledgeBase());
 ipcMain.handle('scan:run', (_event, scannerId: string) => core.runScan(scannerId));
 ipcMain.handle('scan:runAll', () => core.runAll());
+ipcMain.handle('scan:report', () => core.runScanReport());
 ipcMain.handle('ocr:matchText', (_event, text: string) => core.matchOcrText(text));
 ipcMain.handle('repair:list', () => repairs.list());
 ipcMain.handle('repair:run', (_event, repairId: string) => repairs.run(repairId));
