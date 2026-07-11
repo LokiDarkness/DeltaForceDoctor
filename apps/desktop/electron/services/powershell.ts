@@ -11,3 +11,15 @@ export function runPowerShell(command: string, timeoutMs = 30_000): Promise<Powe
     });
   });
 }
+
+export async function runPowerShellJson<T>(command: string, fallback: T, timeoutMs = 30_000): Promise<{ value: T; raw: PowerShellResult; parseError?: string }> {
+  const raw = await runPowerShell(`${command} | ConvertTo-Json -Depth 6 -Compress`, timeoutMs);
+  if (raw.exitCode !== 0 || raw.stdout.trim().length === 0) return { value: fallback, raw };
+  try {
+    return { value: JSON.parse(raw.stdout) as T, raw };
+  } catch (error) {
+    return { value: fallback, raw, parseError: error instanceof Error ? error.message : String(error) };
+  }
+}
+
+export function isWindows(): boolean { return process.platform === 'win32'; }

@@ -10,6 +10,10 @@ declare module 'better-sqlite3' {
       all(...params: unknown[]): unknown[];
     }
   }
-  function Database(filename: string): Database.Database;
+  interface DatabaseConstructor {
+    new(filename: string): Database.Database;
+    (filename: string): Database.Database;
+  }
+  const Database: DatabaseConstructor;
   export = Database;
 }
